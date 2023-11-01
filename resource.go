@@ -35,6 +35,12 @@ func New[T any](maxCount int, producer func() T) *Pool[T] {
 }
 
 func (p *Pool[T]) addResource() {
+	select {
+	case <-p.done:
+		return
+	default:
+	}
+
 	r := p.producer()
 
 	select {
