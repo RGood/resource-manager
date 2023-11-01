@@ -84,6 +84,13 @@ func (p *Pool[T]) TryClaim() (T, error) {
 }
 
 func (p *Pool[T]) Dispose() error {
+	select {
+	case <-p.done:
+		return nil
+	default:
+		close(p.done)
+	}
+
 	close(p.resources)
 
 	// Empty the pool
