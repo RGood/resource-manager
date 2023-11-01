@@ -35,18 +35,14 @@ func New[T any](maxCount int, producer func() T) *Pool[T] {
 }
 
 func (p *Pool[T]) addResource() {
-	select {
-	case <-p.done:
+	if p.isDisposed() {
 		return
-	default:
 	}
 
 	r := p.producer()
 
-	select {
-	case <-p.done:
+	if p.isDisposed() {
 		return
-	default:
 	}
 
 	select {
@@ -80,6 +76,15 @@ func (p *Pool[T]) TryClaim() (T, error) {
 	default:
 		var t T
 		return t, ErrPoolDrained
+	}
+}
+
+func (p *Pool[T]) isDisposed() bool {
+	select {
+	case <-p.done:
+		return true
+	default:
+		return false
 	}
 }
 
